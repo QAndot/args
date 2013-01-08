@@ -1,4 +1,4 @@
 args
 ====
 
-Command-line argument handling for people with better things to do.
+C++ command-line argument handling for people with better things to do.
