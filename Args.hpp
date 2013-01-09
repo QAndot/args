@@ -67,9 +67,9 @@ public:
 
 	class Error::RedefinitionOfKey : public Error {
 	public:
-		RedefinitionOfKey(const char *key) : Error(REDEFINITION_OF_KEY), _key(key), _count(1) {
+		RedefinitionOfKey(const char *key) : Error(REDEFINITION_OF_KEY), _key(key), _count(2) {
 			std::stringstream ss;
-			ss << "Keyword argument \"" << key << "\" has been defined.";
+			ss << "Keyword argument \"" << key << "\" has been redefined.";
 			_description = ss.str();
 		}
 		void addCount() {
@@ -87,9 +87,9 @@ public:
 
 	class Error::RedefinitionOfUnaryArg : public Error {
 	public:
-		RedefinitionOfUnaryArg(const char *unary_arg) : Error(REDEFINITION_OF_UNARY_ARG), _unary_arg(unary_arg), _count(1) {
+		RedefinitionOfUnaryArg(const char *unary_arg) : Error(REDEFINITION_OF_UNARY_ARG), _unary_arg(unary_arg), _count(2) {
 			std::stringstream ss;
-			ss << "Unary argument \"" << _unary_arg << "\" has been defined.";
+			ss << "Unary argument \"" << _unary_arg << "\" has been redefined.";
 			_description = ss.str();
 		}
 		void addCount() {
@@ -291,7 +291,7 @@ public:
 				if (arg.find(c) != std::string::npos) {
 					// Extract keyword and value from argument.
 					std::string keyword(arg.substr(0,arg.find(c)));
-					std::string value(arg.find(c)+1,std::string::npos);
+					std::string value(arg.substr(arg.find(c)+1,std::string::npos));
 					// See if key matches.
 					for (int i = 0; i < _keyword_args.size(); ++ i) {
 						if (_keyword_args[i] == keyword || _keyword_arg_abbrs[i] == keyword) {
@@ -310,7 +310,7 @@ public:
 										}
 									}
 									// Otherwise add a new error.
-									if (i == _errors.size()) {
+									if (ei == _errors.size()) {
 										Error::RedefinitionOfKey *error = new Error::RedefinitionOfKey(_keyword_args[i].c_str());
 										_errors.push_back(error);
 									}
@@ -345,7 +345,7 @@ public:
 								}
 							}
 							// Otherwise add a new error.
-							if (i == _errors.size()) {
+							if (ei == _errors.size()) {
 								Error::RedefinitionOfUnaryArg *error = new Error::RedefinitionOfUnaryArg(_unary_args[i].c_str());
 								_errors.push_back(error);
 							}
