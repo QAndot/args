@@ -5,7 +5,7 @@ C++ command-line argument handling for people with better things to do.
 
 Background
 ----------
-Processing command-line arguments from within a program can be messy. Doing it right takes a lot of development time, and doing it wrong can result in a frustrating, limited user interface. This package (really just a C++ header file) is designed to make handling arguments easy, so you can get on to better things.
+Processing command-line arguments from within a program can be messy. Doing it right takes a lot of development time, and doing it wrong can result in a frustrating, limited user interface. This package (really just a C++ header file) is designed to make handling arguments easy, so you can move on to better things.
 
 Chances are, you don't particularly care whether the end user types `-key=val` or `-key val` the program should get the point. *args* makes no distinction, interpreting each of these patterns as an assignment. *args* also allows you to control which characters may be used for assignments. For instance, perhaps the colon is an appropriate choice for your project.
 
