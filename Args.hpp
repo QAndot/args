@@ -2,23 +2,25 @@
 // Args.hpp
 //
 
+#include <stdexcept>
 #include <sstream>
 #include <string>
-#include <stdexcept>
 #include <vector>
 
-#ifndef ARGS_H
-#define ARGS_H
+#ifndef ARGS_HPP
+#define ARGS_HPP
 
 class Args {
 public:
 
+	// Base class for any exception that occurs within the args library.
 	class Exception : public std::runtime_error {
 	public:
 		Exception(const char *message) : std::runtime_error(message) { }
 		Exception(const std::string& message) : std::runtime_error(message.c_str()) { }
 	};
 
+	// Base class for errors noted while processing the command-line arguments.
 	class Error {
 	public:
 
@@ -37,10 +39,12 @@ public:
 
 	protected:
 		std::string _description;
+
 	private:
 		Type _type;
 	};
 
+	// An unrecognized argument was encountered on the command-line.
 	class Error::UnrecognizedArg : public Error {
 	public:
 		UnrecognizedArg(const char *arg) : Error(UNRECOGNIZED_ARG), _arg(arg) {
@@ -53,6 +57,7 @@ public:
 		std::string _arg;
 	};
 
+	// A keyword argument occurs at the end of the argument list, and has no corresponding value.
 	class Error::NoValueForKey : public Error {
 	public:
 		NoValueForKey(const char *key) : Error(NO_VALUE_FOR_KEY), _key(key) {
@@ -65,6 +70,8 @@ public:
 		std::string _key;
 	};
 
+	// A keyword argument is defined more than once.
+	// This sort of error is only recorded if _redefinitionIsError == true.
 	class Error::RedefinitionOfKey : public Error {
 	public:
 		RedefinitionOfKey(const char *key) : Error(REDEFINITION_OF_KEY), _key(key), _count(2) {
@@ -85,6 +92,8 @@ public:
 		unsigned _count;
 	};
 
+	// A unary argument is included more than once.
+	// This sort of error is only recorded if _redefinitionIsError == true.
 	class Error::RedefinitionOfUnaryArg : public Error {
 	public:
 		RedefinitionOfUnaryArg(const char *unary_arg) : Error(REDEFINITION_OF_UNARY_ARG), _unary_arg(unary_arg), _count(2) {
@@ -469,4 +478,4 @@ private:
 	bool _redefinition_is_error;
 };
 
-#endif
+#endif // ARGS_HPP
