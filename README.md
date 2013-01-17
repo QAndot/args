@@ -115,7 +115,7 @@ args.setRedefinitionIsError(false);
 ```
 before processing arguments.
 
-To allow users to separate keywords from values with a colon <b>or</b> an equals sign, add
+You can choose which characters function as separators in key/value strings using the `setSeps` method. For example, to allow users to separate keywords from values with a colon <b>or</b> an equals sign, add
 ```c++
 args.setSeps(":=");
 ```
