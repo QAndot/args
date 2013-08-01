@@ -21,6 +21,8 @@ public:
 	};
 
 	// Base class for errors noted while processing the command-line arguments.
+	// Note that these are quite different from "Exceptions", which signal an error in the
+	// program logic, not in the user's invocation.
 	class Error {
 	public:
 
@@ -72,6 +74,7 @@ public:
 
 	// A keyword argument is defined more than once.
 	// This sort of error is only recorded if _redefinitionIsError == true.
+	// You can set it to be true with setRedefinitionIsError(bool).
 	class Error::RedefinitionOfKey : public Error {
 	public:
 		RedefinitionOfKey(const char *key) : Error(REDEFINITION_OF_KEY), _key(key), _count(2) {
@@ -94,6 +97,7 @@ public:
 
 	// A unary argument is included more than once.
 	// This sort of error is only recorded if _redefinitionIsError == true.
+	// You can set it to be true with setRedefinitionIsError(bool).
 	class Error::RedefinitionOfUnaryArg : public Error {
 	public:
 		RedefinitionOfUnaryArg(const char *unary_arg) : Error(REDEFINITION_OF_UNARY_ARG), _unary_arg(unary_arg), _count(2) {
@@ -122,9 +126,14 @@ public:
 			delete _errors[i];
 		}
 	}
+
+	// Returns the name of the executable (the very first argument to the program).
 	const std::string& execName() const { return _exec_name; }
+
+	// *sep_string* is a list of characters which are recognized to separate argument keywords from argument values.
 	void setSepString(const char *sep_string) {
 		// Make sure that separator string does not contain any of the characters in the keyword and unary args or abbreviations.
+		// For instance, if you have a unary argument "-C:", you cannot use the colon ":" to separate keyword values.
 		for (int ci = 0; ci < _seps.length(); ++ ci) {
 			char c = _seps[ci];
 			for (int i = 0; i < _unary_args.size(); ++ i) {
@@ -154,13 +163,21 @@ public:
 		}
 		_seps = sep_string;
 	}
+
+	// Returns the string containing the list of characters which may be used to separate argument names from values.
 	const std::string& sepString() const { return _seps; }
+
+	// Returns whether redefining a keyword or unary argument is an error (default is true).
 	bool redefinitionIsError() const { return _redefinition_is_error; }
+
+	// Sets whether or not redefining a keyword argument (or unary argument) is an error.
 	void setRedefinitionIsError(bool redefinitionIsError) {
 		_redefinition_is_error = redefinitionIsError;
 	}
+
+	// Adds a keyword argument with the given name and an optional abbreviation.
 	void addKeywordArg(const char *keyword_arg, const char *abbr = NULL) {
-		// Throw an exception on duplicate arguments.
+		// Throw an exception on duplicate keyword arguments.
 		for (int i = 0; i < _keyword_args.size(); ++ i) {
 			if (_keyword_args[i] == keyword_arg) {
 				std::stringstream ss;
@@ -183,6 +200,7 @@ public:
 				throw Exception(ss.str());
 			}
 		}
+		// Throw an exception if the keyword argument matches any of the unary arguments.
 		for (int i = 0; i < _unary_args.size(); ++ i) {
 			if (_unary_args[i] == keyword_arg) {
 				std::stringstream ss;
@@ -205,6 +223,7 @@ public:
 				throw Exception(ss.str());
 			}
 		}
+		// Create a string for the keyword argument.
 		std::string keyword_arg_str = keyword_arg;
 		// Throw exception on keywords that contain separator characters.
 		for (int ci = 0; ci < _seps.length(); ++ ci) {
@@ -215,15 +234,19 @@ public:
 				throw Exception(ss.str());
 			}
 		}
+		// Create a string for the keyword argument abbreviation.
 		std::string abbr_str;
 		if (abbr != NULL) abbr_str = abbr;
+		// Record the keyword argument and its abbreviation in the appropriate lists.
 		_keyword_args.push_back(keyword_arg_str);
 		_keyword_arg_abbrs.push_back(abbr_str);
 		_keyword_args_defined.push_back(false);
 		_keyword_arg_values.push_back("");
 	}
+
+	// Adds a unary argument with the given name and an optional abbreviation.
 	void addUnaryArg(const char *unary_arg, const char *abbr = NULL) {
-		// Throw an exception on duplicate arguments.
+		// Throw an exception on duplicate unary arguments.
 		for (int i = 0; i < _unary_args.size(); ++ i) {
 			if (_unary_args[i] == unary_arg) {
 				std::stringstream ss;
@@ -246,6 +269,7 @@ public:
 				throw Exception(ss.str());
 			}
 		}
+		// Throw an exception if the unary argument matches any of the keyword arguments.
 		for (int i = 0; i < _keyword_args.size(); ++ i) {
 			if (_keyword_args[i] == unary_arg) {
 				std::stringstream ss;
@@ -268,6 +292,7 @@ public:
 				throw Exception(ss.str());
 			}
 		}
+		// Create a string for the unary argument.
 		std::string unary_arg_str = unary_arg;
 		// Throw exception on unary args that contain separator characters.
 		for (int ci = 0; ci < _seps.length(); ++ ci) {
@@ -278,18 +303,26 @@ public:
 				throw Exception(ss.str());
 			}
 		}
+		// Create a string for the unary argument abbreviation.
 		std::string abbr_str;
 		if (abbr != NULL) abbr_str = abbr;
+		// Record the unary argument and its abbreviation in the appropriate lists.
 		_unary_args.push_back(unary_arg_str);
 		_unary_arg_abbrs.push_back(abbr_str);
 		_unary_args_defined.push_back(false);
 
 	}
+
+	// Processes the arguments passed to the program, as described by argc and argv.
 	void processArgs(int argc, const char *argv[]) {
 		if (argc <= 0) return;
+		// The first argument to the program in almost all cases is the name of the executable.
+		// This string can be retrieved later through use of the execName() method.
 		_exec_name = argv[0];
+		// Create a string to hold each command-line argument.
 		std::string arg;
 		int ai = 0;
+		// Loop through all command-line arguments.
 		while (true) {
 			argloop: ++ ai;
 			if (ai == argc) break;
@@ -402,15 +435,21 @@ public:
 			_errors.push_back(error);
 		}
 	}
+
+	// Returns true if a keyword argument with the given name has been defined through the use of the addKeywordArg method.
 	bool hasKeywordArg(const char *keyword_arg) const {
 		for (int i = 0; i < _keyword_args.size(); ++ i) {
 			if (_keyword_args[i] == keyword_arg) return true;
 		}
 		return false;
 	}
+
+	// Returns true if a keyword argument with the given name has been defined through the use of the addKeywordArg method.
 	bool hasKeywordArg(const std::string& keyword_arg) const {
 		return hasKeywordArg(keyword_arg.c_str());
 	}
+
+	// Returns true if a keyword argument with the given name was defined during argument processing.
 	bool keywordArgDefined(const char *keyword_arg) const {
 		for (int i = 0; i < _keyword_args.size(); ++ i) {
 			if (_keyword_args[i] == keyword_arg) return _keyword_args_defined[i];
@@ -421,9 +460,14 @@ public:
 			throw Exception(ss.str());
 		}
 	}
+
+	// Returns true if a keyword argument with the given name was defined during argument processing.
 	bool keywordArgDefined(const std::string& keyword_arg) const {
 		return keywordArgDefined(keyword_arg.c_str());
 	}
+
+	// Returns the value of the keyword argument with the given name.
+	// Throws an exception if that keyword argument was not defined.
 	const std::string& valueForKeywordArg(const char *keyword_arg) const {
 		for (int i = 0; i < _keyword_args.size(); ++ i) {
 			if (_keyword_args[i] == keyword_arg) return _keyword_arg_values[i];
@@ -434,15 +478,22 @@ public:
 			throw Exception(ss.str());
 		}
 	}
+
+	// Returns the value of the keyword argument with the given name.
+	// Throws an exception if that keyword argument was not defined.
 	const std::string& valueForKeywordArg(const std::string& keyword_arg) const {
 		return valueForKeywordArg(keyword_arg.c_str());
 	}
+
+	// Returns true if a unary argument with the given name has been defined through the use of the addUnaryArg method.
 	bool hasUnaryArg(const char *unary_arg) const {
 		for (int i = 0; i < _unary_args.size(); ++ i) {
 			if (_unary_args[i] == unary_arg) return true;
 		}
 		return false;
 	}
+
+	// Returns true if the unary argument with the given name was defined during argument processing.
 	bool unaryArgDefined(const char *unary_arg) const {
 		for (int i = 0; i < _unary_args.size(); ++ i) {
 			if (_unary_args[i] == unary_arg) return _unary_args_defined[i];
@@ -453,16 +504,17 @@ public:
 			throw Exception(ss.str());
 		}
 	}
+
+	// Returns a reference to a vector of pointers encapsulating information about errors encountered
+	// during argument processing. All the objects pointed to are subclasses of Args::Error.
 	const std::vector<Error*>& errors() const {
 		return _errors;
 	}
-private:
-	void safelyAddKeywordArg(const char *keyword, const char *value) {
 
-	}
+private:
 	// A string of characters which may be used to separate keys from values in a key-value argument.
 	std::string _seps;
-	// The name of the executable as it was invoked (typically the first command-line argument).
+	// The name of the executable as it was invoked (typically the very first command-line argument).
 	std::string _exec_name;
 	// Unary arg vectors.
 	std::vector<std::string> _unary_args;
