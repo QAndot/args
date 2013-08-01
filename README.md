@@ -5,13 +5,13 @@ C++ command-line argument handling for people with better things to do.
 
 Background
 ----------
-Processing command-line arguments from within a program can be messy. Doing it right takes a lot of development time, and doing it wrong often results in a frustrating, limited user interface. This package (really just a C++ header file) is designed to make handling arguments easy, so you can move on to better things.
+Processing command-line arguments from within a program can be messy. Doing it right takes a lot of time, and doing it wrong can result in a frustrating, limited user interface. This C++ header file is designed to make handling command-line arguments easy, so you can move on to better things.
 
 Chances are, you don't particularly care whether the user types `-key=val` or `-key val` when invoking your program. *args* makes no distinction, interpreting each of these patterns as an assignment. *args* also allows you to control which characters may be used for assignments. For instance, the colon (as in `-key:val`) may be an appropriate choice for your project.
 
 You probably also want your arguments to have abbreviations, so that the user doesn't have to type *--some-incredibly-long-argument-name* each time they run your program. *args* allows you to specify an abbreviation for every argument, and automagically checks for naming conflicts.
 
-*args* keeps a human-readable record of the errors it encounters when processing your program's command-line arguments. This allows your pgroam's users to more quickly identify the error in their invocation and get on to using the program.
+*args* keeps a human-readable record of the errors it encounters when processing your program's command-line arguments. This allows your program's users to more quickly identify the error in their invocation and get on to using the program.
 
 Examples
 --------
@@ -20,15 +20,20 @@ Examples
 
 #include <iostream>
 
+// This is where all the magic happens.
 #include "Args.hpp"
 
 int main(int argc, const char *argv[]) {
 	// The command-line argument parser, initialized with default settings.
 	Args args;
 
-	// Define some arguments your program will accept.
+	// Define some keyword arguments your program will accept.
+	// Keyword arguments have a name, and an optional abbreviation.
+	// They store a value which the user assigns on the command line.
 	args.addKeywordArg("-key1", "-k1");
 	args.addKeywordArg("-key2", "-k2");
+
+	// A unary argument either exists or it doesn't. It has no associated value.
 	args.addUnaryArg("--unary1", "--u1");
 
 	// Process the command-line arguments.
@@ -50,11 +55,15 @@ int main(int argc, const char *argv[]) {
 	} else std::cout << "false\n";
 
 	// See if --unary1 is defined.
-	std::cout << "Unary argument \"--unary1\" defined: " << (args.unaryArgDefined("--unary1")?"true":"false") << "\n";
-	std::cout << "Has unary arg \"--unary1\" : " << (args.hasUnaryArg("--unary1")?"true":"false") << "\n";
-	std::cout << "Has unary arg \"--foo\" : " << (args.hasUnaryArg("--foo")?"true":"false") << "\n";
+	std::cout << "Unary argument \"--unary1\" defined: "
+		<< (args.unaryArgDefined("--unary1")?"true":"false") << "\n";
+	std::cout << "Has unary arg \"--unary1\" : "
+		<< (args.hasUnaryArg("--unary1")?"true":"false") << "\n";
+	std::cout << "Has unary arg \"--foo\" : "
+		<< (args.hasUnaryArg("--foo")?"true":"false") << "\n";
 
-	// If there were any errors processing the arguments, write a description of each to STDERR, and exit with code 1.
+	// If there were any errors processing the arguments, write a human-readable
+	// description of each to STDERR, and exit with code 1.
 	if (args.errors().size() > 0) {
 		std::cerr << "\n\nArgument errors\n---------------\n";
 		for (int e = 0; e < args.errors().size(); ++ e) {
@@ -75,7 +84,7 @@ When run like this,
 ```bash
 ./test -k1=value1 -key2 value2 --unary1
 ```
-the program produces this output:
+the test program written above produces this output:
 
 	Keyword "-key1" defined: true
 	Value: "value1"
@@ -104,7 +113,7 @@ the program produces this output:
 	Unary argument "--unary1" has been defined 3 times.
 	No corresponding value for keyword argument "-key1".
 
-Although "--foo" is specified on the command-line, args.hasUnaryArg("--foo") still returns false because the argument handling object was not configured to respond to "--foo".
+Please note that although "--foo" is specified on the command-line, args.hasUnaryArg("--foo") still returns false because the argument handling object was not configured to respond to "--foo".
 
 Other Options
 -------------
