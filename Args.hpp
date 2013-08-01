@@ -339,7 +339,7 @@ public:
 						if (_keyword_args[i] == keyword || _keyword_arg_abbrs[i] == keyword) {
 							if (_keyword_args_defined[i]) {
 								if (_redefinition_is_error) {
-									// See if this keyword argument has already been redefined.
+									// See if this keyword argument has already been redefined (an error has already been created).
 									int ei;
 									for (ei = 0; ei < _errors.size(); ++ ei) {
 										if (_errors[ei]->type() == Error::REDEFINITION_OF_KEY) {
